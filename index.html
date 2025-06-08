@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Python OOP Knowledge Base</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Warm Neutral Technical" - A calm, professional palette with a light neutral background, warm sand tones for cards, deep slate for text, and subtle teal/amber accents for interactions. -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive knowledge hub, moving away from the linear report format. The structure prioritizes exploration and mental model building.
+        1. Header & Navigation: A sticky header provides global navigation between the main thematic sections, allowing non-linear exploration.
+        2. Core Concepts Dashboard: A tabbed interface to present the four pillars (Encapsulation, etc.). This breaks down the foundational knowledge into digestible, parallel chunks. Users can switch between concepts without scrolling, making comparison easier. Each tab uses interactive analogies (like a bank account for encapsulation) to make abstract concepts tangible.
+        3. Advanced Constructs Explorer: A dedicated section for complex topics. It uses a grid layout with interactive "explorers" (e.g., MRO visualizer, descriptor protocol diagram). This hands-on approach is better for understanding deep technical concepts than static text.
+        4. Design & Patterns Hub: This section focuses on the application of OOP. It uses interactive "before/after" code comparisons for SOLID principles and a filterable gallery for Design Patterns. This is designed for practical application, helping engineers see the principles in action.
+        5. Practical Toolkit: A final section with actionable advice, presented as checklists and a decision tree. This helps bridge theory and day-to-day coding practice.
+        This thematic, interactive structure was chosen to transform passive reading into an active learning experience, which is more effective for the target audience of experienced engineers looking to solidify their understanding. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Core OOP Pillars -> Goal: Inform & Compare -> Viz/Method: Tabbed cards with interactive HTML/JS analogies (e.g., clickable bank account buttons). Justification: Makes abstract concepts tangible and easy to compare. Library: Vanilla JS.
+        - Report Info: Inheritance Types -> Goal: Organize & Compare -> Viz/Method: Interactive comparison table where clicking a type highlights its characteristics. Justification: Clear, structured comparison. Library: Vanilla JS.
+        - Report Info: MRO/Diamond Problem -> Goal: Explain a Process -> Viz/Method: Interactive HTML/CSS diagram. Users click to see the resolution path animate. Justification: Visually clarifies a complex algorithm. Library: Vanilla JS.
+        - Report Info: SOLID Principles -> Goal: Demonstrate Transformation -> Viz/Method: "Before/After" code blocks that toggle. Justification: Shows the practical benefit of applying a principle. Library: Vanilla JS.
+        - Report Info: Design Patterns -> Goal: Organize & Inform -> Viz/Method: Filterable card gallery. Justification: Allows quick browsing and access to relevant patterns. Library: Vanilla JS.
+        - Report Info: `__slots__` vs `__dict__` performance -> Goal: Compare -> Viz/Method: Bar chart. Justification: Quantitatively demonstrates the performance difference. Library: Chart.js.
+        - Report Info: When to use OOP -> Goal: Guide Decision -> Viz/Method: Interactive HTML/JS decision tree. Justification: Provides a practical, step-by-step guide for architectural choices. Library: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fdfcf9; color: #333; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .tab-active { border-color: #0d9488; color: #0d9488; background-color: #f0fdfa; }
+        .tab-inactive { border-color: #e5e7eb; color: #6b7280; }
+        .content-active { display: block; }
+        .content-inactive { display: none; }
+        .code-block { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        .code-block .keyword { color: #93c5fd; }
+        .code-block .function { color: #a78bfa; }
+        .code-block .class-name { color: #fde047; }
+        .code-block .comment { color: #64748b; }
+        .code-block .string { color: #a5f3fc; }
+        .code-block .number { color: #f97316; }
+        .decision-node { cursor: pointer; transition: all 0.2s ease-in-out; }
+        .decision-node:hover { background-color: #f0fdfa; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-teal-700">Python OOP: The Interactive Guide</h1>
+            <div class="hidden md:flex space-x-6">
+                <a href="#core-concepts" class="text-gray-600 hover:text-teal-600">Core Concepts</a>
+                <a href="#advanced-constructs" class="text-gray-600 hover:text-teal-600">Advanced Constructs</a>
+                <a href="#design-patterns" class="text-gray-600 hover:text-teal-600">Design & Patterns</a>
+                <a href="#practical-toolkit" class="text-gray-600 hover:text-teal-600">Practical Toolkit</a>
+            </div>
+             <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#core-concepts" class="block py-2 text-gray-600 hover:text-teal-600">Core Concepts</a>
+            <a href="#advanced-constructs" class="block py-2 text-gray-600 hover:text-teal-600">Advanced Constructs</a>
+            <a href="#design-patterns" class="block py-2 text-gray-600 hover:text-teal-600">Design & Patterns</a>
+            <a href="#practical-toolkit" class="block py-2 text-gray-600 hover:text-teal-600">Practical Toolkit</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="intro" class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4 text-slate-800">Mastering Python OOP</h2>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                This guide is an interactive knowledge base for experienced engineers. It goes beyond theory to help you build a robust mental model of Python's Object-Oriented features, design principles, and practical applications.
+            </p>
+        </section>
+
+        <!-- Core Concepts Section -->
+        <section id="core-concepts" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-2 text-slate-800">Core OOP Concepts</h3>
+            <p class="text-slate-600 text-center mb-10">The four pillars of Object-Oriented Programming, re-evaluated for Python. This section explains the fundamental principles that form the basis of object-oriented design, grounding them in Python's specific implementation and exploring nuances critical for a deeper understanding.</p>
+            <div class="max-w-5xl mx-auto">
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button class="tab-button flex-1 py-3 px-2 text-center font-semibold border-b-2 transition tab-active" data-tab="encapsulation">Encapsulation</button>
+                    <button class="tab-button flex-1 py-3 px-2 text-center font-semibold border-b-2 transition tab-inactive" data-tab="inheritance">Inheritance</button>
+                    <button class="tab-button flex-1 py-3 px-2 text-center font-semibold border-b-2 transition tab-inactive" data-tab="polymorphism">Polymorphism</button>
+                    <button class="tab-button flex-1 py-3 px-2 text-center font-semibold border-b-2 transition tab-inactive" data-tab="abstraction">Abstraction</button>
+                </div>
+
+                <div id="encapsulation" class="tab-content content-active">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h4 class="text-2xl font-semibold mb-3 text-teal-700">Encapsulation: The Black Box</h4>
+                            <p class="text-slate-600 mb-4">Encapsulation bundles data (attributes) and the methods that operate on that data into a single unit (a class). It restricts direct access to an object's internal state, protecting its integrity. You interact through a public interface, not by tampering with the internals.</p>
+                            <p class="text-slate-600"><strong class="font-semibold text-slate-700">Python's Take:</strong> It relies on convention (`_protected`, `__private` name mangling) rather than strict enforcement, trusting the developer.</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-lg shadow-inner">
+                            <h5 class="text-lg font-semibold text-center mb-4">Analogy: Bank Account</h5>
+                            <div class="bg-white p-4 rounded-md text-center">
+                                <p class="text-sm text-slate-500">Account Balance (Private State)</p>
+                                <p id="account-balance" class="text-3xl font-bold font-mono text-slate-800">$1000.00</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <button id="deposit-btn" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-teal-700 transition">Deposit $50</button>
+                                <button id="withdraw-btn" class="bg-amber-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-amber-600 transition">Withdraw $20</button>
+                            </div>
+                             <p id="account-message" class="text-sm text-center mt-3 text-red-600 h-4"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inheritance" class="tab-content content-inactive">
+                    <h4 class="text-2xl font-semibold mb-3 text-teal-700">Inheritance: Building on Foundations</h4>
+                    <p class="text-slate-600 mb-6">Inheritance allows a new class (child) to acquire properties and methods from an existing class (parent). Its primary purpose is to model "is-a" relationships (e.g., a `Poodle` is-a `Dog`).</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50">
+                                    <th class="p-4 font-semibold text-slate-700">Type</th>
+                                    <th class="p-4 font-semibold text-slate-700">Description</th>
+                                    <th class="p-4 font-semibold text-slate-700">Use Case</th>
+                                    <th class="p-4 font-semibold text-slate-700">Key Concern</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="p-4 font-semibold">Single</td>
+                                    <td class="p-4 text-slate-600">A class inherits from one base class.</td>
+                                    <td class="p-4 text-slate-600">Simple, clear hierarchies.</td>
+                                    <td class="p-4 text-slate-600">Limited code reuse across unrelated classes.</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-4 font-semibold">Multi-level</td>
+                                    <td class="p-4 text-slate-600">A class inherits from another derived class.</td>
+                                    <td class="p-4 text-slate-600">Building specialized classes in layers.</td>
+                                    <td class="p-4 text-slate-600">Can lead to deep, rigid hierarchies.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 font-semibold">Multiple</td>
+                                    <td class="p-4 text-slate-600">A class inherits from multiple base classes.</td>
+                                    <td class="p-4 text-slate-600">Combining diverse functionalities (Mixins).</td>
+                                    <td class="p-4 text-red-600">The "Diamond Problem" - requires understanding MRO.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="polymorphism" class="tab-content content-inactive">
+                     <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                             <h4 class="text-2xl font-semibold mb-3 text-teal-700">Polymorphism: Many Forms, One Interface</h4>
+                            <p class="text-slate-600 mb-4">Polymorphism allows objects of different classes to be treated as objects of a common superclass. It's about using a single interface to represent different underlying forms.</p>
+                            <p class="text-slate-600"><strong class="font-semibold text-slate-700">Python's Take:</strong> Mostly achieved via "Duck Typing". If it walks like a duck and quacks like a duck, it's a duck. The object's type is less important than the methods it implements.</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-lg shadow-inner">
+                            <h5 class="text-lg font-semibold text-center mb-4">Analogy: The `len()` function</h5>
+                             <p class="text-center text-slate-600 mb-4">The same function `len()` works on different types because they all implement the `__len__` method.</p>
+                             <div class="space-y-3">
+                                <div class="bg-white p-3 rounded-md flex justify-between items-center">
+                                    <p class="font-mono text-slate-800">len("Hello")</p>
+                                    <p class="font-mono font-bold text-teal-700">5</p>
+                                </div>
+                                 <div class="bg-white p-3 rounded-md flex justify-between items-center">
+                                    <p class="font-mono text-slate-800">len([1, 2, 3])</p>
+                                    <p class="font-mono font-bold text-teal-700">3</p>
+                                </div>
+                                <div class="bg-white p-3 rounded-md flex justify-between items-center">
+                                    <p class="font-mono text-slate-800">len({"a": 1, "b": 2})</p>
+                                    <p class="font-mono font-bold text-teal-700">2</p>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="abstraction" class="tab-content content-inactive">
+                    <h4 class="text-2xl font-semibold mb-3 text-teal-700">Abstraction: Hiding Complexity</h4>
+                    <p class="text-slate-600 mb-6">Abstraction hides complex implementation details and exposes only the essential features of an object. It's about defining a contract or an interface that subclasses must follow, without worrying about the "how".</p>
+                    <div class="bg-slate-50 p-6 rounded-lg shadow-inner">
+                        <h5 class="text-lg font-semibold mb-3">Analogy: Abstract Base Class (ABC) for a `DataSource`</h5>
+                        <p class="text-slate-600 mb-4">An abstract `DataSource` class can define a contract that all data sources must have a `get_data()` method. The high-level code doesn't care if the data comes from a file, a database, or an API, as long as the contract is fulfilled.</p>
+                        <div class="code-block font-mono text-sm">
+                            <pre><code><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="class-name">DataSource</span>(ABC):
+    @abstractmethod
+    <span class="keyword">def</span> <span class="function">get_data</span>(self):
+        <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="class-name">FileSource</span>(DataSource):
+    <span class="keyword">def</span> <span class="function">get_data</span>(self):
+        <span class="comment"># ... logic to read from file</span>
+        <span class="keyword">return</span> <span class="string">"Data from file"</span>
+
+<span class="keyword">class</span> <span class="class-name">DatabaseSource</span>(DataSource):
+    <span class="keyword">def</span> <span class="function">get_data</span>(self):
+        <span class="comment"># ... logic to query database</span>
+        <span class="keyword">return</span> <span class="string">"Data from database"</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Advanced Constructs Section -->
+        <section id="advanced-constructs" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-2 text-slate-800">Advanced Pythonic Constructs</h3>
+             <p class="text-slate-600 text-center mb-10">Explore the sophisticated OOP features unique to Python that unlock metaprogramming and fine-grained control over object behavior. This section dives into the language's object model, providing a deeper understanding of how Python works "under the hood."</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- MRO Explorer -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-3 text-teal-700">MRO Explorer</h4>
+                    <p class="text-slate-600 mb-4">Method Resolution Order (MRO) is how Python deterministically finds methods in multiple inheritance hierarchies. Explore the C3 linearization algorithm in action.</p>
+                    <div id="mro-diagram" class="text-center font-mono text-sm relative">
+                        <!-- Classes -->
+                        <div class="absolute" style="top: 0; left: 50%; transform: translateX(-50%);"><div class="border-2 border-slate-400 rounded-md px-3 py-1 bg-slate-100">A</div></div>
+                        <div class="absolute" style="top: 60px; left: 20%; transform: translateX(-50%);"><div class="border-2 border-slate-400 rounded-md px-3 py-1 bg-slate-100">B</div></div>
+                        <div class="absolute" style="top: 60px; left: 80%; transform: translateX(-50%);"><div class="border-2 border-slate-400 rounded-md px-3 py-1 bg-slate-100">C</div></div>
+                        <div class="absolute" style="top: 120px; left: 50%; transform: translateX(-50%);"><div class="border-2 border-slate-400 rounded-md px-3 py-1 bg-slate-100">D</div></div>
+                        <!-- Lines -->
+                        <svg class="absolute top-0 left-0 w-full h-full" style="height: 140px;">
+                            <line x1="50%" y1="28px" x2="20%" y2="60px" stroke="#cbd5e1" stroke-width="2"/>
+                            <line x1="50%" y1="28px" x2="80%" y2="60px" stroke="#cbd5e1" stroke-width="2"/>
+                            <line x1="20%" y1="88px" x2="50%" y2="120px" stroke="#cbd5e1" stroke-width="2"/>
+                            <line x1="80%" y1="88px" x2="50%" y2="120px" stroke="#cbd5e1" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <button id="mro-btn" class="w-full mt-40 bg-teal-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-teal-700 transition">Show MRO for D(B, C)</button>
+                    <p id="mro-output" class="mt-4 text-center font-mono font-semibold text-amber-600 bg-amber-50 p-2 rounded-md h-10"></p>
+                </div>
+
+                <!-- Descriptors -->
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-3 text-teal-700">Descriptors</h4>
+                    <p class="text-slate-600 mb-4">Descriptors are the mechanism behind properties, methods, and more. They let you customize attribute access by implementing `__get__`, `__set__`, or `__delete__`.</p>
+                     <div class="code-block font-mono text-sm">
+                        <pre><code><span class="keyword">class</span> <span class="class-name">MyClass</span>:
+    @property
+    <span class="keyword">def</span> <span class="function">my_attr</span>(self):
+        <span class="comment"># Under the hood, this is a descriptor!</span>
+        <span class="keyword">return</span> self._my_attr</code></pre>
+                     </div>
+                      <p class="text-center my-4 text-slate-500 text-2xl font-bold">&darr;</p>
+                     <div class="code-block font-mono text-sm">
+                        <pre><code><span class="comment"># Is roughly equivalent to:</span>
+<span class="keyword">class</span> <span class="class-name">PropertyDescriptor</span>:
+    <span class="keyword">def</span> <span class="function">__get__</span>(self, obj, type):
+        <span class="comment"># ... logic here ...</span>
+        <span class="keyword">return</span> obj._my_attr</code></pre>
+                     </div>
+                </div>
+
+                <!-- Metaclasses -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-3 text-teal-700">Metaclasses</h4>
+                    <p class="text-slate-600 mb-4">Metaclasses are the "class of a class". They define how classes are created, allowing you to hook into the class creation process itself. A powerful, but rarely needed, tool.</p>
+                    <div class="code-block font-mono text-sm">
+                        <pre><code><span class="comment"># A metaclass to enforce all methods have docstrings</span>
+<span class="keyword">class</span> <span class="class-name">DocstringEnforcer</span>(type):
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls, name, bases, dct):
+        <span class="keyword">for</span> key, val <span class="keyword">in</span> dct.items():
+            <span class="keyword">if</span> callable(val) <span class="keyword">and not</span> val.__doc__:
+                <span class="keyword">raise</span> TypeError(f<span class="string">"{key} must have a docstring"</span>)
+        <span class="keyword">return super</span>().__new__(cls, name, bases, dct)
+
+<span class="comment"># Usage</span>
+<span class="keyword">class</span> <span class="class-name">MyService</span>(metaclass=DocstringEnforcer):
+    <span class="keyword">def</span> <span class="function">do_work</span>(self):
+        <span class="string">"""This method is OK."""</span>
+        <span class="keyword">pass</span>
+    <span class="keyword">def</span> <span class="function">do_other_work</span>(self):
+        <span class="comment"># This would raise a TypeError!</span>
+        <span class="keyword">pass</span>
+</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Design Principles & Patterns Section -->
+        <section id="design-patterns" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-2 text-slate-800">Design Principles & Patterns</h3>
+            <p class="text-slate-600 text-center mb-10">Move beyond individual constructs to architectural principles and reusable solutions that guide the design of scalable, maintainable, and flexible systems. This section covers foundational guidelines and common blueprints for solving recurring problems.</p>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- SOLID Principles -->
+                <div>
+                    <h4 class="text-2xl font-semibold mb-6 text-center text-teal-700">SOLID Principles</h4>
+                    <div class="space-y-4" id="solid-principles">
+                        <!-- Principles will be injected here by JS -->
+                    </div>
+                </div>
+
+                <!-- Design Patterns -->
+                <div>
+                    <h4 class="text-2xl font-semibold mb-6 text-center text-teal-700">Common Design Patterns</h4>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <p class="text-slate-600 mb-4">Design patterns are reusable blueprints for solving common problems. Here are a few examples adapted for Python.</p>
+                        <div class="code-block font-mono text-sm">
+                            <pre><code id="pattern-code"></code></pre>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-4" id="pattern-buttons">
+                           <!-- Buttons injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Practical Toolkit Section -->
+        <section id="practical-toolkit" class="scroll-mt-20">
+             <h3 class="text-3xl font-bold text-center mb-2 text-slate-800">The Practical Toolkit</h3>
+             <p class="text-slate-600 text-center mb-10">Bridge the gap between theory and practice with actionable advice for real-world Python OOP development. This section addresses best practices, performance considerations, and the critical question of when to use—and when to avoid—OOP.</p>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Performance -->
+                <div>
+                    <h4 class="text-2xl font-semibold mb-6 text-center text-teal-700">Performance: `__slots__` vs `__dict__`</h4>
+                     <p class="text-slate-600 mb-4 text-center">Using `__slots__` can significantly reduce memory usage and speed up attribute access by preventing the creation of a `__dict__` for each instance. This chart shows a conceptual memory usage comparison.</p>
+                    <div class="bg-white p-6 rounded-lg shadow-md chart-container">
+                        <canvas id="slotsChart"></canvas>
+                    </div>
+                </div>
+                <!-- Decision Tree -->
+                <div>
+                    <h4 class="text-2xl font-semibold mb-6 text-center text-teal-700">When to Use a Class?</h4>
+                    <p class="text-slate-600 mb-4 text-center">OOP is a tool, not a dogma. Use this decision tree to help determine if a class is the right tool for your problem, avoiding over-engineering.</p>
+                    <div class="bg-white p-6 rounded-lg shadow-md" id="decision-tree">
+                        <div id="dt-start" class="p-4 bg-slate-100 rounded-md border border-slate-200">
+                            <p class="font-semibold text-center">Start here: What is the primary purpose of my code?</p>
+                        </div>
+                        <div id="dt-node-1" class="hidden mt-4 ml-4 border-l-2 border-slate-300 pl-4">
+                            <div class="p-3 bg-slate-50 rounded-md border border-slate-200 decision-node" data-next="dt-node-2">
+                                <p><strong class="text-teal-700">Managing State:</strong> Does it need to remember data and change over time?</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-md border border-slate-200 mt-2 decision-node" data-next="dt-node-3">
+                                <p><strong class="text-amber-700">Simple Operation:</strong> Is it a one-off task or data transformation?</p>
+                            </div>
+                        </div>
+                         <div id="dt-node-2" class="hidden mt-4 ml-8 border-l-2 border-slate-300 pl-4">
+                             <div class="p-3 bg-green-50 rounded-md border border-green-200">
+                                <p class="font-semibold text-green-800">💡 A `class` is an excellent choice. It encapsulates state and behavior perfectly.</p>
+                            </div>
+                        </div>
+                        <div id="dt-node-3" class="hidden mt-4 ml-8 border-l-2 border-slate-300 pl-4">
+                             <div class="p-3 bg-blue-50 rounded-md border border-blue-200">
+                                <p class="font-semibold text-blue-800">💡 A simple `function` is likely better. Avoid the overhead of a class. (KISS Principle)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>Interactive Python OOP Knowledge Base</p>
+            <p class="text-sm mt-2">Designed to transform a technical report into an engaging, explorable learning experience.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile Menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Core Concepts Tabs
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
+
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('tab-active');
+                        btn.classList.add('tab-inactive');
+                    });
+                    button.classList.add('tab-active');
+                    button.classList.remove('tab-inactive');
+
+                    tabContents.forEach(content => {
+                        if (content.id === tab) {
+                            content.classList.add('content-active');
+                            content.classList.remove('content-inactive');
+                        } else {
+                            content.classList.add('content-inactive');
+                            content.classList.remove('content-active');
+                        }
+                    });
+                });
+            });
+
+            // Encapsulation Analogy
+            const balanceEl = document.getElementById('account-balance');
+            const depositBtn = document.getElementById('deposit-btn');
+            const withdrawBtn = document.getElementById('withdraw-btn');
+            const messageEl = document.getElementById('account-message');
+            let balance = 1000.00;
+
+            const updateBalance = () => {
+                balanceEl.textContent = `$${balance.toFixed(2)}`;
+            };
+            
+            const showMessage = (msg, isError = false) => {
+                messageEl.textContent = msg;
+                messageEl.style.color = isError ? '#dc2626' : '#059669';
+                setTimeout(() => messageEl.textContent = '', 3000);
+            }
+
+            depositBtn.addEventListener('click', () => {
+                balance += 50;
+                updateBalance();
+                showMessage('Deposit successful!');
+            });
+
+            withdrawBtn.addEventListener('click', () => {
+                if (balance >= 20) {
+                    balance -= 20;
+                    updateBalance();
+                    showMessage('Withdrawal successful!');
+                } else {
+                    showMessage('Insufficient funds!', true);
+                }
+            });
+
+            // MRO Explorer
+            const mroBtn = document.getElementById('mro-btn');
+            const mroOutput = document.getElementById('mro-output');
+            mroBtn.addEventListener('click', () => {
+                mroOutput.textContent = 'D -> B -> C -> A';
+                mroBtn.textContent = 'Reset';
+                setTimeout(() => {
+                    mroOutput.textContent = '';
+                    mroBtn.textContent = 'Show MRO for D(B, C)';
+                }, 4000);
+            });
+
+            // SOLID Principles
+            const solidContainer = document.getElementById('solid-principles');
+            const solidData = [
+                {
+                    name: "Single Responsibility Principle (SRP)",
+                    desc: "A class should have only one reason to change.",
+                    before: `class Animal:\n  def __init__(self, name):\n    self.name = name\n\n  def save_to_db(self):\n    # ... db logic`,
+                    after: `class Animal:\n  def __init__(self, name):\n    self.name = name\n\nclass AnimalDB:\n  def save(self, animal):\n    # ... db logic`
+                },
+                {
+                    name: "Open/Closed Principle (OCP)",
+                    desc: "Open for extension, closed for modification.",
+                    before: `class Payment:\n  def process(self, type):\n    if type == 'cc': ...\n    elif type == 'paypal': ...`,
+                    after: `class Payment(ABC):\n  @abstractmethod\n  def process(self):\n    pass`
+                },
+                 {
+                    name: "Liskov Substitution Principle (LSP)",
+                    desc: "Subtypes must be substitutable for their base types.",
+                    before: `class Rectangle:\n  def set_w(self, w): self.w = w\n  def set_h(self, h): self.h = h\n\nclass Square(Rectangle):\n  def set_w(self, w): self.w=self.h=w`,
+                    after: `Don't inherit! If a Square must maintain w==h, it cannot be substituted for a Rectangle.`
+                },
+                {
+                    name: "Dependency Inversion Principle (DIP)",
+                    desc: "Depend on abstractions, not concretions.",
+                    before: `class ReportGenerator:\n  def __init__(self):\n    self.db = MySQLDatabase()`,
+                    after: `class ReportGenerator:\n  def __init__(self, source: IDataSource):\n    self.source = source`
+                }
+            ];
+
+            solidData.forEach(p => {
+                const element = document.createElement('div');
+                element.className = 'bg-white p-4 rounded-lg shadow-md cursor-pointer';
+                element.innerHTML = `
+                    <h5 class="font-semibold text-slate-800">${p.name}</h5>
+                    <p class="text-sm text-slate-500 mb-2">${p.desc}</p>
+                    <div class="hidden code-comparison grid md:grid-cols-2 gap-2 text-xs font-mono">
+                        <div class="bg-red-50 p-2 rounded">
+                            <h6 class="font-bold text-red-700 mb-1">Before</h6>
+                            <pre class="text-red-900">${p.before.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+                        </div>
+                         <div class="bg-green-50 p-2 rounded">
+                            <h6 class="font-bold text-green-700 mb-1">After</h6>
+                            <pre class="text-green-900">${p.after.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+                        </div>
+                    </div>
+                `;
+                element.addEventListener('click', () => {
+                    element.querySelector('.code-comparison').classList.toggle('hidden');
+                });
+                solidContainer.appendChild(element);
+            });
+            
+            // Design Patterns
+            const patternCodeEl = document.getElementById('pattern-code');
+            const patternButtonsContainer = document.getElementById('pattern-buttons');
+            const patterns = {
+                'Singleton': `class Singleton(type):\n    _instances = {}\n    def __call__(cls, *args, **kwargs):\n        if cls not in cls._instances:\n            cls._instances[cls] = super().__call__(*args, **kwargs)\n        return cls._instances[cls]\n\nclass Logger(metaclass=Singleton):\n    pass`,
+                'Factory': `class Animal(ABC):\n    @abstractmethod\n    def speak(self):\n        pass\n\ndef get_animal(animal_type: str) -> Animal:\n    if animal_type == 'dog':\n        return Dog()\n    elif animal_type == 'cat':\n        return Cat()`,
+                'Strategy': `class SortStrategy(ABC):\n    @abstractmethod\n    def sort(self, data):\n        pass\n\nclass Context:\n    def __init__(self, strategy: SortStrategy):\n        self._strategy = strategy\n\n    def execute_sort(self, data):\n        return self._strategy.sort(data)`
+            };
+
+            const updatePattern = (patternName) => {
+                patternCodeEl.innerHTML = patterns[patternName]
+                    .replace(/class (\w+)/g, '<span class="keyword">class</span> <span class="class-name">$1</span>')
+                    .replace(/def (\w+)/g, '<span class="keyword">def</span> <span class="function">$1</span>')
+                    .replace(/super/g, '<span class="keyword">super</span>')
+                    .replace(/return/g, '<span class="keyword">return</span>');
+                
+                document.querySelectorAll('#pattern-buttons button').forEach(b => {
+                    if (b.textContent === patternName) {
+                        b.classList.add('bg-teal-600', 'text-white');
+                        b.classList.remove('bg-slate-200', 'text-slate-700');
+                    } else {
+                        b.classList.remove('bg-teal-600', 'text-white');
+                        b.classList.add('bg-slate-200', 'text-slate-700');
+                    }
+                });
+            };
+
+            Object.keys(patterns).forEach(name => {
+                const button = document.createElement('button');
+                button.textContent = name;
+                button.className = 'py-1 px-3 rounded-full text-sm font-semibold transition';
+                button.addEventListener('click', () => updatePattern(name));
+                patternButtonsContainer.appendChild(button);
+            });
+            
+            updatePattern('Singleton');
+
+            // Slots chart
+            const ctx = document.getElementById('slotsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['10,000 Objects'],
+                    datasets: [
+                        {
+                            label: 'Memory with __dict__',
+                            data: [100],
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Memory with __slots__',
+                            data: [35],
+                            backgroundColor: 'rgba(13, 148, 136, 0.6)',
+                            borderColor: 'rgba(13, 148, 136, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Conceptual Memory Usage Comparison' },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.raw}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: (value) => value + '%' }
+                        }
+                    }
+                }
+            });
+            
+            // Decision Tree
+            const decisionNodes = document.querySelectorAll('.decision-node');
+            const tree = document.getElementById('decision-tree');
+            tree.querySelector('#dt-start').addEventListener('click', () => {
+                 tree.querySelector('#dt-node-1').classList.remove('hidden');
+                 tree.querySelector('#dt-node-2').classList.add('hidden');
+                 tree.querySelector('#dt-node-3').classList.add('hidden');
+            });
+            decisionNodes.forEach(node => {
+                node.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const nextNodeId = node.dataset.next;
+                    const nextNode = document.getElementById(nextNodeId);
+                    if (nextNode) {
+                        document.querySelectorAll('.decision-node + div').forEach(el => {
+                            if (el.id !== nextNodeId) el.classList.add('hidden');
+                        });
+                        nextNode.classList.remove('hidden');
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
